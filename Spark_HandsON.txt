@@ -1,0 +1,480 @@
+Data Eng certi is easy 
+Spark not there
+
+Other is more
+
+----------Interview
+MapReduce logical questions come
+Spark Coding questions come .Practical whatever we did.
+
+
+In Map Reduce 
+Disk Iterations are very much.
+Best part of MapReduce was its Fault Tolerance.
+But Everything  was on disk .
+
+So Goal is Fault tolerance in memory processing.
+They Created RDD.(Resilient Distributed DataSet).
+
+Q.What is a RDD?
+
+Spark does not have its own Filesystem.
+So it works on HDFS.
+
+It comes as replacement of MAPREDUCE.
+
+
+It works on YARN , Apache Mesos etc.
+
+
+Spark can work on  HIVE tables.SPARKSQL. 
+
+
+HandsOn
+
+
+>>Type      spark-shell 
+This is spark for scala.
+>>quit.
+
+
+>>pyspark
+This is Python CLI.
+
+
+Created a  directory
+inside that map.py
+
+#importLibraries
+from pyspark import SparkConf,SparkContext
+
+#Create spark context object
+sc=SparkContext()
+
+###Create SourceRDD, the same will be used for the coming examples
+sourceRDD=sc.parallelize([51,44,11,12,14,5,6,3,3,1,7,7,11],4)
+
+###Transform elements using map
+mapRDD=sourceRDD.map(lambda x:x+1)
+
+###Get results out of RDD using action collect
+mapResult=mapRDD.collect()
+
+##Print the results
+print(mapResult)
+
+
+
+Then write it.
+spark-submit map.py >out.log
+
+
+cat out.log
+
+This  Processing took place in MEMORY.
+
+RDD is immutable(cant change after coming into memory) dataset on memory.
+On it only ACTION or TRANSFORMATION can took place.
+
+
+
+
+
+SPARK
+
+
+
+-----------map (Transformation)
+
+.map is a function which can compute on every element one function of source RDD
+
+lamba function is very famous in pyspark.
+In lambda we dont tell anything like datatype
+Everything anonymous like here it is x.
+
+
+
+--------collect(Action)
+
+To see the contents we used here
+mapResult=mapRDD.collect()
+Then printed
+
+---print
+print(mapResult)
+
+
+************************RDD is fault tolerant as well.
+
+
+RDD has functions
+
+{
+1.partitions : one per HDFS  block ::::::For HDFS RDD(first RDD)
+2.dependency : Two types :::: 1. Narrow 
+			    2. Wide  
+			For HDFS RDD :: None
+3.compute :    Read file and load it.
+4.preferred location : HDFS BLOCK Location
+
+}
+
+After HDFS RDD 
+another RDD say transformed to say where amount more than 10000 eg
+
+{
+	partitions: ASK Parent;
+	dependency: narrow dependency on HDFS RDD as one  to one came  from hdfs only
+	compute: filter amount >10000
+	preferred location: ask parent; 
+}
+
+
+Lineage : If RDD fails , In order to recreate it this  info is needed. ---This is FAULT TOLERANCE here.
+
+
+
+
+
+-------Difference between Map(transformation) FlatMap (transformation)
+Flatmap seperates.
+
+Two ways to load data in spark
+1. Hard Coding
+sc.parallelize(list)
+2.Loading from hdfs
+sc.textfile
+
+
+map_str.py
+from pyspark import SparkConf,SparkContext
+sc=SparkContext()
+linesRDD=sc.parallelize(["map reduce is spark","spark is version of map reduce","Spark map reduce next version"])
+wordList=linesRDD.map(lambda line : line.split(" " ))
+wordListOp=wordList.collect()
+print(wordListOp)
+
+#Now if we even do a count,we get sentece count not word count
+sentenceCount=wordList.count()
+print(sentenceCount)
+
+
+OUTPUT
+
+[['map', 'reduce', 'is', 'spark'], ['spark', 'is', 'version', 'of', 'map', 'reduce'], ['Spark', 'map', 'reduce', 'next', 'version']]
+3
+
+
+_----Flatmap 
+flatmap_str.py
+
+from pyspark import SparkConf,SparkContext
+sc=SparkContext()
+linesRDD=sc.parallelize(["map reduce is spark","spark is version of map reduce","Spark map reduce next version"])
+wordList=linesRDD.flatMap(lambda line : line.split(" " ))
+wordListOp=wordList.collect()
+print(wordListOp)
+
+#Now if we even do a count,we get sentece count not word count
+sentenceCount=wordList.count()
+print(sentenceCount)
+
+
+
+Outputflatmap.log
+
+
+['map', 'reduce', 'is', 'spark', 'spark', 'is', 'version', 'of', 'map', 'reduce', 'Spark', 'map', 'reduce', 'next', 'version']
+15
+ 
+
+
+---filter
+filter.py
+filter returns boolean If it fulfils condition
+it will pass else not
+For True will go in next RDD
+
+
+
+from pyspark import SparkConf,SparkContext
+sc=SparkContext()
+sourceRDD=sc.parallelize([1,2,3,4,67,33,8,90,336,67,33])
+filterRDD=sourceRDD.filter(lambda x:x%2==0)
+filterResult=filterRDD.collect()
+print(filterResult)
+
+
+outfil.py
+
+[2, 4, 8, 90, 336]
+
+
+-----distinct
+gives distinct no.
+
+distinct.py
+from pyspark import SparkConf,SparkContext
+sc=SparkContext()
+sourceRDD=sc.parallelize([1,1,1,1,2,3,4,5,6,7,8,9,2,3,4,67,33,8,90,336,67,33])
+distinctRDD=sourceRDD.distinct()
+distinctResult=distinctRDD.collect()
+print(distinctResult)
+
+
+
+reduce.py
+#importLibraries
+from pyspark import SparkConf,SparkContext
+
+#Create spark context object
+sc=SparkContext()
+
+###Create SourceRDD, the same will be used for the coming examples
+sourceRDD=sc.parallelize([51.0,44,11,12,14,5,6,3,3,1,7,7,11],4)
+
+###Transform elements using map
+count=sourceRDD.count()
+total=sourceRDD.reduce(lambda x,y:x+y)
+print(total)
+
+average=(total*1.0)/count
+
+##Print the results
+print(average)
+
+
+
+reduceoutput.log
+175.0
+13.4615384615
+
+
+
+
+outfil.log
+
+[2, 4, 6, 8, 336, 90, 1, 67, 5, 33, 9, 7, 3]
+
+
+
+---------------Actions 
+
+
+reduce
+collect
+count
+
+
+--------Pair RDDS
+reduceByKey
+sortByKey
+groupBykey
+join
+
+These are key value rdds 
+
+------reducebykey
+
+runs as per no of unique keys
+
+will perform operation on values of same  key
+
+
+from pyspark import SparkConf,SparkContext
+sc=SparkContext()
+
+keyValueRDD=sc.parallelize([(1,2),(2,4),(3,2),(1,2),(2,4),(3,2)])
+reduceByKeyRDD=keyValueRDD.reduceByKey(lambda a,b:a+b)
+results=reduceByKeyRDD.collect()
+print(results)
+
+
+
+output
+
+[(2, 8), (1, 4), (3, 4)]
+
+
+
+--------sortbykey
+sorting on basis of key
+
+
+from pyspark import SparkConf,SparkContext
+sc=SparkContext()
+
+keyValueRDD=sc.parallelize([(1,2),(2,4),(3,2),(1,2),(2,4),(3,2)])
+sortByKeyRDD=keyValueRDD.sortByKey()
+results=sortByKeyRDD.collect()
+print(results)
+
+
+
+
+[(1, 2), (1, 2), (2, 4), (2, 4), (3, 2), (3, 2)]
+
+
+
+---groupbykey
+
+Q. difference btw reducebykey and groupbykey
+
+After grouping aggregation doesnot take place in groupbykey
+
+from pyspark import SparkConf,SparkContext
+sc=SparkContext()
+
+keyValueRDD=sc.parallelize([(1,2),(2,4),(3,2),(1,2),(2,4),(3,2)])
+groupByKeyRDD=keyValueRDD.groupByKey()
+results=groupByKeyRDD.map(lambda (k,v):(k,sum(v)))
+final=results.collect()
+print(final)
+
+
+
+
+
+
+[(2, 8), (1, 4), (3, 4)]
+
+Here collect is working but for large data saveas textfile
+
+
+
+
+WordCount
+
+
+
+
+
+SQL Context
+purchase.data file putted in hdfs
+
+
+
+
+from pyspark import SparkConf,SparkContext
+sc=SparkContext()
+from pyspark.sql import SQLContext
+sqlcontext=SQLContext(sc)
+data_file="/user/mudgal_abhinav19/purchase.data"
+raw_data=sc.textFile(data_file)
+from pyspark.sql import Row
+csv_data=raw_data.map(lambda l:l.split(","))
+row_data=csv_data.map(lambda p:Row(
+cust_id=int(p[0]),
+amount=p[1],
+product=p[2]
+)
+)
+transactions_df=sqlContext.createDataFrame(row_data)
+transactions_df.registerTempTable("transactions")
+id_amount=sqlContext.sql("""
+SELECT cust_id,sum(amount) FROM transactions group by cust_id """)
+id_amount.show()
+
+
+3 quotes for multiline query
+
+
+Made dataframe (table ) for spark
+
+In Hive Context need not to create this Row n all
+as it(hive) already has metadata
+
+
+
+from pyspark import SparkConf,SparkContext
+sc=SparkContext()
+from pyspark.sql import SQLContext
+sqlcontext=SQLContext(sc)
+data_file="/user/mudgal_abhinav19/purchase.data"
+raw_data=sc.textFile(data_file)
+from pyspark.sql import Row
+csv_data=raw_data.map(lambda l:l.split(","))
+row_data=csv_data.map(lambda p:Row(
+cust_id=int(p[0]),
+amount=p[1],
+product=p[2]
+)
+)
+transactions_df=sqlContext.createDataFrame(row_data)
+transactions_df.registerTempTable("transactions")
+id_amount=sqlContext.sql("""
+SELECT cust_id,sum(amount) as total_amount FROM transactions group by cust_id """)
+id_amount.registerTempTable("inter_table")
+max_amount=sqlContext.sql("""
+SELECT max(total_amount) as max_amount FROM inter_table """)
+max_amount.show()
+
+
+
+
+-----------HiveContext
+
+
+
+from pyspark import SparkConf,SparkContext
+sc=SparkContext()
+from pyspark.sql import HiveContext
+hive_context=HiveContext(sc)
+hive_context.sql("use abhi")
+data=hive_context.sql("""SELECT * FROM country""")
+data.show()
+
+
+out.log 
++---+-----+----------+
+| id| name|country_cd|
++---+-----+----------+
+|  1|nitin|       usa|
+|  2|rahul|       ind|
+|  3|rishi|       aus|
+|  4| abhi|        uk|
++---+-----+----------+
+
+
+Adv : In memory processing of hive there so fast.
+
+
+WordCount
+
+from pyspark import SparkConf,SparkContext
+sc=SparkContext()
+fileRDD=sc.textFile("/user/mudgal_abhinav19/wordcount.txt")
+
+(fileRDD.flatMap(lambda line:line.split(""))
+.map(lambda word:(word.lower(),1))
+.reduceByKey(lambda a,b:a+b)
+.map(lambda (k,v):(v,k))
+.sortByKey(False)
+.map(lambda (k:v):(v,k))
+.saveAsTextFile("/user/mudgal_abhinav19/sparkresult"))
+
+
+
+--------------------------------------------------Log Analysis-----------------------------------------------------------------------------
+
+
+Endpoints wali projectcode 
+
+zipwithindex gives index to each key value pair to select top twenty`
+filter to select  top 20
+
+
+
+
+
+
+Resource Manager acts as ClusterMAnager in spark
+slaves----WorkerNOdes
+code submitted
+Executer codes start working.
+Directed Acyclic Graph (DAG) creates for Efficiency just as in PIG
+dividing in tasks and submitted to worker nodes.
+
+
+
+
